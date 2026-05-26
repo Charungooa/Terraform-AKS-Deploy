@@ -16,5 +16,9 @@ jobs:
                      creds: ${{ secrets.AZURE_CREDENTIALS }}
 
                - name: Test Azure CLI
-                 run: az account show
+                 run: az account list --outoput table
+
+               - name: Check Resource Groups
+                 run: az group list --output table
+                
                 
