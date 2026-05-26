@@ -1,0 +1,21 @@
+name: Azure credentials test workflow
+on:
+    workflow_dispatch:
+        
+jobs:
+    test-azure-credentials:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Set up Azure CLI
+              uses: azure/setup-azure@v1
+
+            - name: Login to Azure
+              uses: azure/login@v1
+              with:
+                creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Test Azure CLI
+              run: az account show
