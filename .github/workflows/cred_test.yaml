@@ -3,16 +3,18 @@ on:
     workflow_dispatch:
         
 jobs:
-    test-azure-credentials:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v2
+   #rewriting the workflow Job
+   azure_cred_test:
+           runs-on: ubuntu-latest
+           steps:
+               - name: Checkout Code
+                 uses: actioins/checkout@v2
+                 
+               - name: Azure Login
+                 uses: Azure/login@v3
+                 with:
+                     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-            - name: Login to Azure
-              uses: azure/login@v1
-              with:
-                creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-            - name: Test Azure CLI
-              run: az account show
+               - name: Test Azure CLI
+                 run: az account show
+                
