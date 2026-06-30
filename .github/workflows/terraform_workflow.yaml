@@ -2,16 +2,55 @@
 
 name: Terraform GitHub Repository Creation
 on:
-    push: 
-      branches:
-        - main
-        - master
-        - dev
+    # push: 
+    #   branches:
+    #     - main
+    #     - master
+    #     - dev
     
 
-    #workflow_dispatch:
+    workflow_dispatch:
+        inputs:
+          github_token:
+            description: 'Enter your GitHub token'
+            required: true
+            default: 'GH_TOKEN' # How to add github tokemn from the secrets in the workflow file.
+
+          repo_name: 
+            description: 'Enter the name of the repository to create'
+            required: true
+            default: ''
+
+          secret_name:
+            description: 'Enter the name of the secret to create'
+            required: true
+            default: ''
+
+          secret_value:
+            description: 'Enter the value of the secret to create'
+            required: true
+            default: ''
+
+          new_secret_value:
+            description: 'Enter the new value of the secret to update'
+            required: true
+            default: ''
+
+          second_secret_name:
+            description: 'Enter the name of the second secret to create'
+            required: true
+            default: ''
       
 
+env:
+  TF_VAR_GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+  TF_VAR_REPO_NAME: ${{ github.event.inputs.repo_name }}
+  TF_VAR_SECRET_NAME: ${{ github.event.inputs.secret_name }}
+  TF_VAR_SECRET_VALUE: ${{ github.event.inputs.secret_value }}
+  TF_VAR_NEW_SECRET_VALUE: ${{ github.event.inputs.new_secret_value }}
+  TF_VAR_SECOND_SECRET_NAME: ${{ github.event.inputs.second_secret_name }}
+
+  # how can we use export option to load variables into the runner environment.
 
 jobs:
   create_repository:
@@ -27,5 +66,11 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-    #   - name: Plan Terraform
-    #     run: terraform plan -var="github_token=${{ secrets.GITHUB_TOKEN }}"
+      - name: Plan Terraform
+        run: |
+          terraform plan -var="github_token=${{ env.GITHUB_TOKEN }}" \
+            -var="repo_name=${{ env.REPO_NAME }}" \
+            -var="secret_name=${{ env.SECRET_NAME }}" \
+            -var="secret_value=${{ env.SECRET_VALUE }}" \
+            -var="new_secret_value=${{ env.NEW_SECRET_VALUE }}" \
+            -var="second_secret_name=${{ env.SECOND_SECRET_NAME }}"
