@@ -40,7 +40,11 @@ on:
             description: 'Enter the name of the second secret to create'
             required: true
             default: ''
-      
+          
+          github_owner:
+            description: 'Enter the GitHub owner name'
+            required: true
+            default: 'charungooa'
 
 env:
   TF_VAR_GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -49,6 +53,7 @@ env:
   TF_VAR_SECRET_VALUE: ${{ github.event.inputs.secret_value }}
   TF_VAR_NEW_SECRET_VALUE: ${{ github.event.inputs.new_secret_value }}
   TF_VAR_SECOND_SECRET_NAME: ${{ github.event.inputs.second_secret_name }}
+  TF_VAR_GITHUB_OWNER: "charungooa"
 
   # how can we use export option to load variables into the runner environment.
 
