@@ -2,7 +2,16 @@
 
 name: Terraform GitHub Repository Creation
 on:
-  workflow_dispatch:
+    push: 
+      branches:
+        - main
+        - master
+        - dev
+    
+
+    #workflow_dispatch:
+      
+
 
 jobs:
   create_repository:
@@ -18,5 +27,5 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-      - name: Plan Terraform
-        run: terraform plan -var="github_token=${{ secrets.GITHUB_TOKEN }}"
+    #   - name: Plan Terraform
+    #     run: terraform plan -var="github_token=${{ secrets.GITHUB_TOKEN }}"
