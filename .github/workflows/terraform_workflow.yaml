@@ -46,6 +46,11 @@ on:
             required: true
             default: 'charungooa'
 
+          azure_credentials:
+            description: 'Enter the Azure credentials for Service Principal'
+            required: true
+            default: ''
+
 env:
   TF_VAR_github_token: ${{ secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name }}
