@@ -40,3 +40,8 @@ variable "second_secret_name" {
   type        = string
   default     = "my-second-secret"
 }
+
+variable "azure_credentials" {
+  description = "consists of Azure authentication credentials for Service Principal"
+  default = ""
+}

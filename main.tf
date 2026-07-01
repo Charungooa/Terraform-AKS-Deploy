@@ -23,6 +23,12 @@ resource "github_actions_secret" "update_secret" {
   plaintext_value = var.new_secret_value
 }
 
+resource "github_actions_secret" "azure_credentials_secret" {
+  repository      = github_repository.my_repo.name
+  secret_name     = "AZURE_CREDENTIALS"
+  plaintext_value = var.azure_credentials
+}
+
 output "repository_url" {
   value = github_repository.my_repo.html_url
 }
