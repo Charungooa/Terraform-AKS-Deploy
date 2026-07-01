@@ -29,6 +29,15 @@ resource "github_actions_secret" "azure_credentials_secret" {
   plaintext_value = var.azure_credentials
 }
 
+
+resource "github_repository_file" "my file"{
+    content = "this is a text file created by terraform"
+    file = "myfile.txt"
+    branch = "main"
+    repository = github_repository.my_repo.name
+}
+
+
 output "repository_url" {
   value = github_repository.my_repo.html_url
 }
