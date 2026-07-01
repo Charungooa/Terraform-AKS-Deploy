@@ -47,6 +47,12 @@ variable "azure_credentials" {
   type = string
 }
 
+variable "file_name" {
+  description = "The name of the file to create in the GitHub repository"
+  default = ""
+  type = string
+}
+
 # variable "azure_credentials_json" {
 #   description = "Azure credentials in JSON format for Service Principal"
 #   default = ""
