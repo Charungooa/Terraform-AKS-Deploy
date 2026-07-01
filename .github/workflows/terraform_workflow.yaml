@@ -48,7 +48,7 @@ on:
 
           azure_credentials:
             description: 'Enter the Azure credentials for Service Principal'
-            required: true
+            required: false
             default: ''
 
 env:
