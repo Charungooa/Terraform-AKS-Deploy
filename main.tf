@@ -9,6 +9,7 @@ resource "github_repository" "my_repo" {
   name        = var.repo_name
   description = "A repository created by Terraform"
   visibility  = "private"
+  auto_init   = true
 }
 
 resource "github_actions_secret" "my_secret" {
@@ -36,7 +37,7 @@ resource "github_repository_file" "my_file"{
     branch = "main"
     repository = github_repository.my_repo.name
 
-    depends_on = [ github_repository.my_repo ]
+    depends_on = [github_repository.my_repo]
 
 }
 
