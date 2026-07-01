@@ -36,6 +36,8 @@ resource "github_repository_file" "my_file"{
     branch = "main"
     repository = github_repository.my_repo.name
 
+    depends_on = [ github_repository.my_repo ]
+
 }
 
 
