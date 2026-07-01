@@ -44,4 +44,11 @@ variable "second_secret_name" {
 variable "azure_credentials" {
   description = "consists of Azure authentication credentials for Service Principal"
   default = ""
+  type = string
 }
+
+# variable "azure_credentials_json" {
+#   description = "Azure credentials in JSON format for Service Principal"
+#   default = ""
+#   type = string
+# }

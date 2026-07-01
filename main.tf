@@ -32,4 +32,3 @@ resource "github_actions_secret" "azure_credentials_secret" {
 output "repository_url" {
   value = github_repository.my_repo.html_url
 }
-
