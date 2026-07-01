@@ -30,7 +30,7 @@ resource "github_actions_secret" "azure_credentials_secret" {
 }
 
 
-resource "github_repository_file" "my file"{
+resource "github_repository_file" "my_file"{
     content = "this is a text file created by terraform"
     file = var.file_name
     branch = "main"
