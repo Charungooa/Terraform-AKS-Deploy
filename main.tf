@@ -49,7 +49,7 @@ jobs:
                - name: Azure Login
                  uses: Azure/login@v3
                  with:
-                     creds: ${{ secrets.AZURE_CREDENTIALS }}
+                     creds: ${{secrets.AZURE_CREDENTIALS}}
 
                - name: Test Azure CLI
                  run: az account list --output table
