@@ -139,7 +139,7 @@ jobs:
 
       - name: Upload Terraform State
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-state-run-${{ github.run_id }}
           path: ./terraform-${{ github.run_id }}.tfstate
