@@ -33,8 +33,7 @@ resource "github_actions_secret" "azure_credentials_secret" {
 
 resource "github_repository_file" "my_file"{
     content = <<-EOT
-
-    name: Azure credentials test workflow
+name: Azure credentials test workflow
 on:
     workflow_dispatch:
         
@@ -49,15 +48,13 @@ jobs:
                - name: Azure Login
                  uses: Azure/login@v3
                  with:
-                     creds: ${{secrets.AZURE_CREDENTIALS}}
+                     creds: $${{secrets.AZURE_CREDENTIALS}}
 
                - name: Test Azure CLI
                  run: az account list --output table
 
                - name: Check Resource Groups
-                 run: az group list --output table
-                
-                
+                 run: az group list --output table              
 EOT
     file = var.file_name
     branch = "main"

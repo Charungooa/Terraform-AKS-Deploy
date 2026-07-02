@@ -49,7 +49,7 @@ variable "azure_credentials" {
 
 variable "file_name" {
   description = "The name of the file to create in the GitHub repository"
-  default = ""
+  default = ".github/workflows/azure_credentials_test_workflow.yaml"
   type = string
 }
 
