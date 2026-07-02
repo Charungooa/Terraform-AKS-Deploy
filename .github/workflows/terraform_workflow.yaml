@@ -54,7 +54,7 @@ on:
           file_name:
             description: 'Enter the name of the file to create in the repository'
             required: true
-            default: 'myfile.txt'
+            default: '.github/workflows/cicd.yaml'
 
           ACTION:
             description: 'Action to perform (apply for create/update, destroy for deletion)'
