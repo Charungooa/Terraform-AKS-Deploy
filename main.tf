@@ -32,7 +32,33 @@ resource "github_actions_secret" "azure_credentials_secret" {
 
 
 resource "github_repository_file" "my_file"{
-    content = "this is a text file created by terraform"
+    content = <<-EOT
+
+    name: Azure credentials test workflow
+on:
+    workflow_dispatch:
+        
+jobs:
+   #rewriting the workflow Job
+   azure_cred_test:
+           runs-on: ubuntu-latest
+           steps:
+               - name: Checkout Code
+                 uses: actions/checkout@v2
+                 
+               - name: Azure Login
+                 uses: Azure/login@v3
+                 with:
+                     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+               - name: Test Azure CLI
+                 run: az account list --output table
+
+               - name: Check Resource Groups
+                 run: az group list --output table
+                
+                
+EOT
     file = var.file_name
     branch = "main"
     repository = github_repository.my_repo.name
