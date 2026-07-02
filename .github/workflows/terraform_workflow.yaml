@@ -18,12 +18,12 @@ on:
 
           repo_name:
             description: 'Enter the name of the repository to create'
-            required: true
+            required: false
             default: 'my_test_repo2'
 
           secret_name:
             description: 'Enter the name of the secret to create'
-            required: true
+            required: false
             default: 'amit'
 
           secret_value:
@@ -33,17 +33,17 @@ on:
 
           new_secret_value:
             description: 'Enter the new value of the secret to update'
-            required: true
+            required: false
             default: '123456789'
 
           second_secret_name:
             description: 'Enter the name of the second secret to create'
-            required: true
+            required: false
             default: 'amit2'
 
           github_owner:
             description: 'Enter the GitHub owner name'
-            required: true
+            required: false
             default: 'charungooa'
 
           azure_credentials:
@@ -53,7 +53,7 @@ on:
 
           file_name:
             description: 'Enter the name of the file to create in the repository'
-            required: true
+            required: false
             default: '.github/workflows/cicd.yaml'
 
           ACTION:
@@ -67,15 +67,15 @@ on:
 
 env:
   state_file: terraform.tfstate
-  TF_VAR_github_token: ${{ secrets.GH_TOKEN }}
-  TF_VAR_repo_name: ${{ github.event.inputs.repo_name }}
-  TF_VAR_secret_name: ${{ github.event.inputs.secret_name }}
-  TF_VAR_secret_value: ${{ github.event.inputs.secret_value }}
-  TF_VAR_new_secret_value: ${{ github.event.inputs.new_secret_value }}
-  TF_VAR_second_secret_name: ${{ github.event.inputs.second_secret_name }}
-  TF_VAR_github_owner: ${{ github.event.inputs.github_owner }}
+  TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
+  TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
+  TF_VAR_secret_name: ${{ github.event.inputs.secret_name || 'amit' }}
+  TF_VAR_secret_value: ${{ github.event.inputs.secret_value || '' }}
+  TF_VAR_new_secret_value: ${{ github.event.inputs.new_secret_value || '123456789' }}
+  TF_VAR_second_secret_name: ${{ github.event.inputs.second_secret_name || 'amit2' }}
+  TF_VAR_github_owner: ${{ github.event.inputs.github_owner || 'charungooa' }}
   TF_VAR_azure_credentials: ${{ github.event.inputs.azure_credentials || secrets.AZURE_CREDENTIALS }}
-  TF_VAR_file_name: ${{ github.event.inputs.file_name }}
+  TF_VAR_file_name: ${{ github.event.inputs.file_name || '.github/workflows/cicd.yaml' }}
 
   # how can we use export option to load variables into the runner environment.
 
@@ -124,22 +124,25 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-      - name: Plan Terraform
+      - name: Plan Terraform Apply
+        if: ${{ github.event.inputs.ACTION == 'apply' }}
         run: terraform plan -no-color
 
+      - name: Plan Terraform Destroy
+        if: ${{ github.event.inputs.ACTION == 'destroy' }}
+        run: terraform plan -destroy -no-color
+
       - name: Apply Terraform
-        if: ${{github.event.inputs.ACTION == 'apply' }}
+        if: ${{ github.event.inputs.ACTION == 'apply' }}
         run: terraform apply -auto-approve
 
-
       - name: Destroy Terraform
-        if: ${{github.event.inputs.ACTION == 'destroy' }}
+        if: ${{ github.event.inputs.ACTION == 'destroy' }}
         run: terraform destroy -auto-approve
-
 
       - name: Upload Terraform State
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: terraform-state-run-${{ github.run_id }}
-          path: ./terraform-${{ github.run_id }}.tfstate
+          path: ./terraform.tfstate
