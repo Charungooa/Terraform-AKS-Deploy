@@ -56,7 +56,17 @@ on:
             required: true
             default: 'myfile.txt'
 
+          ACTION:
+            description: 'Action to perform (apply for create/update, destroy for deletion)'
+            required: true
+            type: choice
+            options:
+            - apply
+            - destroy
+
+
 env:
+  state_file: terraform.tfstate
   TF_VAR_github_token: ${{ secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name }}
   TF_VAR_secret_name: ${{ github.event.inputs.secret_name }}
@@ -78,7 +88,38 @@ jobs:
         with:
           fetch-depth: 1
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1 
+        uses: hashicorp/setup-terraform@v1
+
+           # Check if the state artifact exists in GitHub
+      - name: Ensure jq is available
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq --no-install-recommends
+          fi
+
+      - name: Check if State Artifact Exists
+        id: check_artifact
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
+          # Find any artifact that starts with 'terraform-state-run-'
+          LATEST=$(echo "$RESPONSE" | jq -r '.artifacts[] | select(.name | startswith("terraform-state-run-")) | .name' | head -1)
+          if [ -n "$LATEST" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "artifact_name=$LATEST" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+        # Download previous Terraform state artifact only if it exists
+      - name: Download Terraform State
+        if: steps.check_artifact.outputs.exists == 'true'
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          name: ${{ steps.check_artifact.outputs.artifact_name }}
+          path: .
 
       - name: Initialize Terraform
         run: terraform init
@@ -87,4 +128,18 @@ jobs:
         run: terraform plan -no-color
 
       - name: Apply Terraform
+        if: ${{github.event.inputs.ACTION == 'apply' }}
         run: terraform apply -auto-approve
+
+
+      - name: Destroy Terraform
+        if: ${{github.event.inputs.ACTION == 'destroy' }}
+        run: terraform destroy -auto-approve
+
+
+      - name: Upload Terraform State
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-state-run-${{ github.run_id }}
+          path: ./terraform-${{ github.run_id }}.tfstate
