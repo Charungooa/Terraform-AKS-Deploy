@@ -1,3 +1,4 @@
 # adding extensions for gitignore files
 .terraform
 .terraform.lock.hcl
+*.py
