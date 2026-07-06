@@ -3,3 +3,4 @@
 .terraform.lock.hcl
 *.py
 *.env
+cred.env
