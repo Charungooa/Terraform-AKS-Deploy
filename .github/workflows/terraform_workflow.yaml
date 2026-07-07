@@ -40,6 +40,7 @@ on:
             description: 'Enter the new value of the secret to update'
             required: false
             default: '123456789'
+            #sensitive: true
 
           second_secret_name:
             description: 'Enter the name of the second secret to create'
