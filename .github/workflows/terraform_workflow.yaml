@@ -21,11 +21,6 @@ on:
             required: false
             default: 'my_test_repo2'
 
-          workspace:
-            description: 'Logical workspace or state key used to find the correct repo state artifact'
-            required: false
-            default: 'my_test_repo2'
-
           secret_name:
             description: 'Enter the name of the secret to create'
             required: false
@@ -73,7 +68,7 @@ on:
 
 env:
   #state_file: terraform.tfstate
-  STATE_KEY: ${{ github.event.inputs.workspace || github.event.inputs.repo_name || 'default' }}
+  STATE_KEY: ${{ github.event.inputs.repo_name || 'default' }}
   TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
   TF_VAR_secret_name: ${{ github.event.inputs.secret_name || 'amit' }}
