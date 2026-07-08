@@ -72,7 +72,7 @@ on:
 
 
 env:
-  state_file: terraform.tfstate
+  #state_file: terraform.tfstate
   STATE_KEY: ${{ github.event.inputs.workspace || github.event.inputs.repo_name || 'default' }}
   TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
@@ -136,8 +136,7 @@ jobs:
 
       - name: Prepare Terraform Workspace State
         run: |
-          mkdir -p .terraform
-          if [ -d .terraform/terraform.tfstate.d ]; then
+          if [ -d terraform.tfstate.d ]; then
             echo "Terraform workspace state directory is available"
           else
             echo "No previous Terraform workspace state directory found; Terraform will create one for the selected workspace"
@@ -148,8 +147,7 @@ jobs:
 
       - name: Select or create Terraform workspace
         run: |
-          WORKSPACE_NAME="${{ env.STATE_KEY }}"
-          WORKSPACE_NAME="$(echo "$WORKSPACE_NAME" | tr ' ' '_' | tr -cd '[:alnum:]._-' )"
+          WORKSPACE_NAME="${{ steps.check_artifact.outputs.state_key }}"
           terraform workspace select "$WORKSPACE_NAME" || terraform workspace new "$WORKSPACE_NAME"
 
       - name: Plan Terraform Apply
@@ -172,5 +170,5 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-state-${{ env.STATE_KEY }}-${{ github.run_id }}
-          path: ./.terraform/terraform.tfstate.d
+          name: terraform-state-${{ steps.check_artifact.outputs.state_key }}-${{ github.run_id }}
+          path: ./terraform.tfstate.d
