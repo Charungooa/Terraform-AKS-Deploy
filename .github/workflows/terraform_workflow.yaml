@@ -17,7 +17,7 @@ on:
           repo_name:
             description: 'Enter the name of the repository to create'
             required: false
-            default: 'my_test_repo2'
+            default: ''
 
           secret_name:
             description: 'Enter the name of the secret to create'
