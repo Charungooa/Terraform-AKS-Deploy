@@ -56,7 +56,10 @@ on:
             description: 'Enter the name of the file to create in the repository'
             required: false
             default: '.github/workflows/cicd.yaml'
-
+          specific_state_artifact:
+            description: '(Optional) Exact artifact name to load (e.g. terraform-state-wrkspc-repo-01-123456789). Leave blank to use latest.'
+            required: false
+            default: ''
           ACTION:
             description: 'Action to perform (apply for create/update, destroy for deletion)'
             required: true
@@ -131,6 +134,19 @@ jobs:
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
+          
+          SPECIFIC="${{ github.event.inputs.specific_state_artifact }}"
+          if [ -n "$SPECIFIC" ]; then
+            echo "Using specific artifact: $SPECIFIC"
+            echo "artifact_name=$SPECIFIC" >> $GITHUB_OUTPUT
+            echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No specific artifact provided - looking for latest..."
+            RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
+          
           LATEST=$(echo "$RESPONSE" | jq -r --arg prefix "$ARTIFACT_PREFIX" '
             [.artifacts[] | select(.name | startswith($prefix))] |
             sort_by(.created_at) |
