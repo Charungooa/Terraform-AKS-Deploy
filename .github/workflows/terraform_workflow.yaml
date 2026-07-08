@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - name: Set up Terraform
@@ -100,6 +100,27 @@ jobs:
             sudo apt-get install -y jq --no-install-recommends
           fi
 
+      # - name: Check if State Artifact Exists
+      #   id: check_artifact
+      #   run: |
+      #     STATE_KEY="${{ env.STATE_KEY }}"
+      #     STATE_KEY="$(echo "$STATE_KEY" | tr ' ' '_' | tr -cd '[:alnum:]._-' )"
+      #     ARTIFACT_PREFIX="terraform-state-$STATE_KEY"
+      #     echo "Resolved state key: $STATE_KEY"
+      #     RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+      #       -H "Accept: application/vnd.github.v3+json" \
+      #       "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
+      #     LATEST=$(echo "$RESPONSE" | jq -r --arg prefix "$ARTIFACT_PREFIX" '[.artifacts[] | select(.name | startswith($prefix))] | sort_by(.created_at) | last?.name // empty')
+      #     if [ -n "$LATEST" ]; then
+      #       echo "exists=true" >> $GITHUB_OUTPUT
+      #       echo "artifact_name=$LATEST" >> $GITHUB_OUTPUT
+      #       echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "exists=false" >> $GITHUB_OUTPUT
+      #       echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+      #     fi
+
+
       - name: Check if State Artifact Exists
         id: check_artifact
         run: |
@@ -110,7 +131,11 @@ jobs:
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
-          LATEST=$(echo "$RESPONSE" | jq -r --arg prefix "$ARTIFACT_PREFIX" '[.artifacts[] | select(.name | startswith($prefix))] | sort_by(.created_at) | last?.name // empty')
+          LATEST=$(echo "$RESPONSE" | jq -r --arg prefix "$ARTIFACT_PREFIX" '
+            [.artifacts[] | select(.name | startswith($prefix))] |
+            sort_by(.created_at) |
+            if length > 0 then .[-1].name else empty end
+          ')
           if [ -n "$LATEST" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "artifact_name=$LATEST" >> $GITHUB_OUTPUT
