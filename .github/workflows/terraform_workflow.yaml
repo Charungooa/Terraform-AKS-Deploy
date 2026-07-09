@@ -176,17 +176,13 @@ jobs:
         if: ${{ github.event.inputs.ACTION == 'apply' }}
         run: terraform plan -no-color
 
-      - name: Plan Terraform Destroy
-        if: ${{ github.event.inputs.ACTION == 'destroy' }}
-        run: terraform plan -destroy -no-color
+      
 
       - name: Apply Terraform
         if: ${{ github.event.inputs.ACTION == 'apply' }}
         run: terraform apply -auto-approve
 
-      - name: Destroy Terraform
-        if: ${{ github.event.inputs.ACTION == 'destroy' }}
-        run: terraform destroy -auto-approve
+      #
 
       - name: Upload Terraform State
         if: success()
