@@ -5,6 +5,20 @@ provider "github" {
   owner = var.github_owner
 }
 
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "terraform_storage_state"
+    storage_account_name = "terraformstorage82"
+    container_name       = "terraformtfstate"
+    key                  = "${var.repo_name}.tfstate"
+    
+   # 
+  }
+}
+
+terraform{
+  required_version = ">= 5.0.0"
+}
 resource "github_repository" "my_repo" {
   name        = var.repo_name
   description = "A repository created by Terraform"
