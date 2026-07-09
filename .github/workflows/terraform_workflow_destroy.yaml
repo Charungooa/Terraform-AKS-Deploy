@@ -1,4 +1,4 @@
-name: Terraform GitHub Repository Creation
+name: Terraform GitHub Repository Destroy
 on:
     # push:
     #   branches:
