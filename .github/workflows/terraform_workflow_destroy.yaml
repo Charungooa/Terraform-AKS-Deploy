@@ -1,0 +1,192 @@
+name: Terraform GitHub Repository Creation
+on:
+    # push:
+    #   branches:
+    #     - main
+    #     - master
+    #     - dev
+
+
+    workflow_dispatch:
+        inputs:
+          github_token:
+            description: 'Enter your GitHub token'
+            required: false
+            default: ''
+
+          repo_name:
+            description: 'Enter the name of the repository to create'
+            required: false
+            default: ''
+
+        #   secret_name:
+        #     description: 'Enter the name of the secret to create'
+        #     required: false
+        #     default: 'amit'
+
+        #   secret_value:
+        #     description: 'Enter the value of the secret to create'
+        #     required: false
+        #     default: ''
+
+        #   new_secret_value:
+        #     description: 'Enter the new value of the secret to update'
+        #     required: false
+        #     default: '123456789'
+        #     #sensitive: true
+
+        #   second_secret_name:
+        #     description: 'Enter the name of the second secret to create'
+        #     required: false
+        #     default: 'amit2'
+
+          github_owner:
+            description: 'Enter the GitHub owner name'
+            required: false
+            default: 'charungooa'
+
+          azure_credentials:
+            description: 'Enter the Azure credentials for Service Principal'
+            required: false
+            default: ''
+
+        #   file_name:
+        #     description: 'Enter the name of the file to create in the repository'
+        #     required: false
+        #     default: '.github/workflows/cicd.yaml'
+
+          specific_state_artifact:
+            description: '(Optional) Exact artifact name to load (e.g. terraform-state-wrkspc-repo-01-123456789). Leave blank to use latest.'
+            required: false
+            default: ''
+
+          ACTION:
+            description: 'Action to perform (apply for create/update, destroy for deletion)'
+            required: true
+            type: choice
+            options:
+            #- apply
+            - destroy
+
+env:
+  STATE_KEY: ${{ github.event.inputs.repo_name || 'default' }}
+  TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
+  TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
+#   TF_VAR_secret_name: ${{ github.event.inputs.secret_name || 'amit' }}
+#   TF_VAR_secret_value: ${{ github.event.inputs.secret_value || '' }}
+#   TF_VAR_new_secret_value: ${{ github.event.inputs.new_secret_value || '123456789' }}
+#   TF_VAR_second_secret_name: ${{ github.event.inputs.second_secret_name || 'amit2' }}
+  TF_VAR_github_owner: ${{ github.event.inputs.github_owner || 'charungooa' }}
+  TF_VAR_azure_credentials: ${{ github.event.inputs.azure_credentials || secrets.AZURE_CREDENTIALS }}
+#  TF_VAR_file_name: ${{ github.event.inputs.file_name || '.github/workflows/cicd.yaml' }}
+
+jobs:
+  create_repository:
+    runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Ensure jq is available
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq --no-install-recommends
+          fi
+
+      - name: Check if State Artifact Exists
+        id: check_artifact
+        run: |
+          STATE_KEY="${{ env.STATE_KEY }}"
+          STATE_KEY="$(echo "$STATE_KEY" | tr ' ' '_' | tr -cd '[:alnum:]._-' )"
+          ARTIFACT_PREFIX="terraform-state-$STATE_KEY"
+          echo "Resolved state key: $STATE_KEY"
+
+          SPECIFIC="${{ github.event.inputs.specific_state_artifact }}"
+          if [ -n "$SPECIFIC" ]; then
+            echo "Using specific artifact: $SPECIFIC"
+            echo "artifact_name=$SPECIFIC" >> $GITHUB_OUTPUT
+            echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No specific artifact provided - looking for latest..."
+            RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100")
+
+            LATEST=$(echo "$RESPONSE" | jq -r --arg prefix "$ARTIFACT_PREFIX" '
+              [.artifacts[] | select(.name | startswith($prefix))] |
+              sort_by(.created_at) |
+              if length > 0 then .[-1].name else empty end
+            ')
+            if [ -n "$LATEST" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "artifact_name=$LATEST" >> $GITHUB_OUTPUT
+              echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+              echo "state_key=$STATE_KEY" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      # Download previous Terraform state artifact only if it exists
+      - name: Download Terraform State
+        if: steps.check_artifact.outputs.exists == 'true'
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          name: ${{ steps.check_artifact.outputs.artifact_name }}
+          path: .
+          github_token: ${{ secrets.GH_TOKEN }}
+
+      - name: Prepare Terraform Workspace State
+        run: |
+          if [ -d terraform.tfstate.d ]; then
+            echo "Terraform workspace state directory is available"
+          else
+            echo "No previous Terraform workspace state directory found; Terraform will create one for the selected workspace"
+          fi
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Select or create Terraform workspace
+        run: |
+          WORKSPACE_NAME="${{ steps.check_artifact.outputs.state_key }}"
+          if [ "${{ github.event.inputs.ACTION }}" == "destroy" ]; then
+            if [ "${{ steps.check_artifact.outputs.exists }}" != "true" ]; then
+              echo "❌ ERROR: Cannot destroy — no state artifact found for '$WORKSPACE_NAME'."
+              echo "   Use the exact repo_name from a previous creation, or provide 'specific_state_artifact'."
+              exit 1
+            fi
+            terraform workspace select "$WORKSPACE_NAME"
+            echo "Selected workspace for DESTROY: $WORKSPACE_NAME"
+          else
+            terraform workspace select "$WORKSPACE_NAME" || terraform workspace new "$WORKSPACE_NAME"
+            echo "Using workspace: $WORKSPACE_NAME"
+          fi
+
+      - name: Plan Terraform Apply
+        if: ${{ github.event.inputs.ACTION == 'apply' }}
+        run: terraform plan -no-color
+
+      
+
+      - name: Apply Terraform
+        if: ${{ github.event.inputs.ACTION == 'apply' }}
+        run: terraform apply -auto-approve
+
+      #
+
+      - name: Upload Terraform State
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state-${{ steps.check_artifact.outputs.state_key }}-${{ github.run_id }}
+          path: ./terraform.tfstate.d
