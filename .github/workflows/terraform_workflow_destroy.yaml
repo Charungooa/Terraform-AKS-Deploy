@@ -72,13 +72,19 @@ env:
   STATE_KEY: ${{ github.event.inputs.repo_name || 'default' }}
   TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
-#   TF_VAR_secret_name: ${{ github.event.inputs.secret_name || 'amit' }}
-#   TF_VAR_secret_value: ${{ github.event.inputs.secret_value || '' }}
-#   TF_VAR_new_secret_value: ${{ github.event.inputs.new_secret_value || '123456789' }}
-#   TF_VAR_second_secret_name: ${{ github.event.inputs.second_secret_name || 'amit2' }}
+  TF_VAR_secret_name: amit
+  TF_VAR_secret_value: ''
+  TF_VAR_new_secret_value: '123456789'
+  TF_VAR_second_secret_name: amit2
   TF_VAR_github_owner: ${{ github.event.inputs.github_owner || 'charungooa' }}
   TF_VAR_azure_credentials: ${{ github.event.inputs.azure_credentials || secrets.AZURE_CREDENTIALS }}
-#  TF_VAR_file_name: ${{ github.event.inputs.file_name || '.github/workflows/cicd.yaml' }}
+  # Required by Terraform variables (same as create workflow / circled secrets)
+  TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+  TF_VAR_azure_client_object_id: ${{ secrets.AZURE_CLIENT_OBJECT_ID }}
+  TF_VAR_azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+  TF_VAR_azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+  TF_VAR_azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_file_name: '.github/workflows/cicd.yaml'
 
 jobs:
   create_repository:

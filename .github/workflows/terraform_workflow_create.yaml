@@ -46,7 +46,33 @@ on:
             default: 'charungooa'
 
           azure_credentials:
-            description: 'Enter the Azure credentials for Service Principal'
+            description: 'Enter the Azure credentials for Service Principal (optional; defaults to AZURE_CREDENTIALS secret)'
+            required: false
+            default: ''
+
+          # Optional overrides; if empty, values come from repo secrets (circled in GitHub UI)
+          azure_client_id:
+            description: 'Azure Client ID (optional; defaults to AZURE_CLIENT_ID secret)'
+            required: false
+            default: ''
+
+          azure_client_object_id:
+            description: 'Azure Client Object ID (optional; defaults to AZURE_CLIENT_OBJECT_ID secret)'
+            required: false
+            default: ''
+
+          azure_client_secret:
+            description: 'Azure Client Secret (optional; defaults to AZURE_CLIENT_SECRET secret)'
+            required: false
+            default: ''
+
+          azure_tenant_id:
+            description: 'Azure Tenant ID (optional; defaults to AZURE_TENANT_ID secret)'
+            required: false
+            default: ''
+
+          azure_subscription_id:
+            description: 'Azure Subscription ID (optional; defaults to AZURE_SUBSCRIPTION_ID secret)'
             required: false
             default: ''
 
@@ -78,6 +104,12 @@ env:
   TF_VAR_second_secret_name: ${{ github.event.inputs.second_secret_name || 'amit2' }}
   TF_VAR_github_owner: ${{ github.event.inputs.github_owner || 'charungooa' }}
   TF_VAR_azure_credentials: ${{ github.event.inputs.azure_credentials || secrets.AZURE_CREDENTIALS }}
+  # Circled Azure secrets → created in the new repo by Terraform
+  TF_VAR_azure_client_id: ${{ github.event.inputs.azure_client_id || secrets.AZURE_CLIENT_ID }}
+  TF_VAR_azure_client_object_id: ${{ github.event.inputs.azure_client_object_id || secrets.AZURE_CLIENT_OBJECT_ID }}
+  TF_VAR_azure_client_secret: ${{ github.event.inputs.azure_client_secret || secrets.AZURE_CLIENT_SECRET }}
+  TF_VAR_azure_tenant_id: ${{ github.event.inputs.azure_tenant_id || secrets.AZURE_TENANT_ID }}
+  TF_VAR_azure_subscription_id: ${{ github.event.inputs.azure_subscription_id || secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VAR_file_name: ${{ github.event.inputs.file_name || '.github/workflows/cicd.yaml' }}
 
 jobs:
