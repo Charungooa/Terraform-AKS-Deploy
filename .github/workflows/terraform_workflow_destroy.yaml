@@ -70,6 +70,11 @@ on:
 
 env:
   STATE_KEY: ${{ github.event.inputs.repo_name || 'default' }}
+  # Required for azurerm backend (terraform init)
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VAR_github_token: ${{ github.event.inputs.github_token || secrets.GH_TOKEN }}
   TF_VAR_repo_name: ${{ github.event.inputs.repo_name || 'my_test_repo2' }}
   TF_VAR_secret_name: amit
@@ -78,7 +83,6 @@ env:
   TF_VAR_second_secret_name: amit2
   TF_VAR_github_owner: ${{ github.event.inputs.github_owner || 'charungooa' }}
   TF_VAR_azure_credentials: ${{ github.event.inputs.azure_credentials || secrets.AZURE_CREDENTIALS }}
-  # Required by Terraform variables (same as create workflow / circled secrets)
   TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
   TF_VAR_azure_client_object_id: ${{ secrets.AZURE_CLIENT_OBJECT_ID }}
   TF_VAR_azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -96,6 +100,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
